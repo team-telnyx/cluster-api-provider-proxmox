@@ -29,10 +29,17 @@ const (
 {{- range $index, $element := .NetworkConfigData }}
   {{- $type := $element.Type }}
   {{- if eq $type "ethernet" }}
+  {{- if eq $element.ProxName "hostpci0" }}
+    {{ $element.Name }}:
+      match:
+        driver: mlx5_core
+  	{{- template "commonSettings" $element }}
+  {{- else }}
     {{ $element.Name }}:
       match:
         macaddress: {{ $element.MacAddress }}
-      {{- template "commonSettings" $element }}
+  	{{- template "commonSettings" $element }}
+  {{- end -}}
   {{- end -}}
 {{- end -}}
 {{- $vrf := 0 -}}

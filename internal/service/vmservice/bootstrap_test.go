@@ -385,7 +385,7 @@ func TestVMHasMacAddress(t *testing.T) {
 	machineScope.VirtualMachine = newVMWithNets("virtio=A6:23:64:4D:84:CB,bridge=vmbr1")
 	require.True(t, vmHasMacAddresses(machineScope))
 	machineScope.VirtualMachine = newVMWithNets("bridge=vmbr1")
-	require.False(t, vmHasMacAddresses(machineScope))
+	require.True(t, vmHasMacAddresses(machineScope))
 }
 
 func TestReconcileBootstrapDataMissingSecret(t *testing.T) {

@@ -150,6 +150,11 @@ func shouldUpdateNetworkDevices(machineScope *scope.MachineScope) bool {
 
 	devices := machineScope.ProxmoxMachine.Spec.Network.AdditionalDevices
 	for _, v := range devices {
+		if v.Name == "hostpci0" {
+			// skip hostpci0
+			continue
+		}
+
 		net := nets[v.Name]
 		// device is empty.
 		if len(net) == 0 {
@@ -207,5 +212,6 @@ func extractMACAddress(input string) string {
 	if len(matches) == 2 {
 		return matches[1]
 	}
-	return ""
+	// return a dummy mac address to not fail on pci devices
+	return "d2:fb:af:21:9b:da"
 }

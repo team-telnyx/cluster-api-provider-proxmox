@@ -244,10 +244,12 @@ func reconcileVirtualMachineConfig(ctx context.Context, machineScope *scope.Mach
 		// handing additional network devices.
 		devices := machineScope.ProxmoxMachine.Spec.Network.AdditionalDevices
 		for _, v := range devices {
-			vmOptions = append(vmOptions, proxmox.VirtualMachineOption{
-				Name:  v.Name,
-				Value: formatNetworkDevice(*v.Model, v.Bridge, v.MTU, v.VLAN),
-			})
+			if v.Name != "hostpci0" {
+				vmOptions = append(vmOptions, proxmox.VirtualMachineOption{
+					Name:  v.Name,
+					Value: formatNetworkDevice(*v.Model, v.Bridge, v.MTU, v.VLAN),
+				})
+			}
 		}
 	}
 
