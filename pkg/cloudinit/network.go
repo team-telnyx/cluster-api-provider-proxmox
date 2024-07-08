@@ -33,6 +33,7 @@ const (
     {{ $element.Name }}:
       match:
         driver: mlx5_core
+      macaddress: {{ $element.MacAddress }}
   	{{- template "commonSettings" $element }}
   {{- else }}
     {{ $element.Name }}:
