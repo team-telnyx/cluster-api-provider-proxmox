@@ -17,6 +17,7 @@ limitations under the License.
 package vmservice
 
 import (
+	"crypto/rand"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -150,6 +151,11 @@ func shouldUpdateNetworkDevices(machineScope *scope.MachineScope) bool {
 
 	devices := machineScope.ProxmoxMachine.Spec.Network.AdditionalDevices
 	for _, v := range devices {
+		if v.Name == "hostpci0" {
+			// skip hostpci0
+			continue
+		}
+
 		net := nets[v.Name]
 		// device is empty.
 		if len(net) == 0 {
@@ -200,6 +206,19 @@ func formatNetworkDevice(model, bridge string, mtu *uint16, vlan *uint16) string
 	return strings.Join(components, ",")
 }
 
+func generateRandomMAC() (string, error) {
+	mac := make([]byte, 6)
+	_, err := rand.Read(mac)
+	if err != nil {
+		return "", err
+	}
+
+	// Set the local bit and ensure unicast (not multicast) address
+	mac[0] = (mac[0] & 0xFE) | 0x02
+
+	return fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]), nil
+}
+
 // extractMACAddress returns the macaddress out of net device input e.g. virtio=A6:23:64:4D:84:CB,bridge=vmbr1.
 func extractMACAddress(input string) string {
 	re := regexp.MustCompile(`=([^,]+),bridge`)
@@ -207,5 +226,10 @@ func extractMACAddress(input string) string {
 	if len(matches) == 2 {
 		return matches[1]
 	}
-	return ""
+	// return a dummy mac address to not fail on pci devices
+	new_mac, err := generateRandomMAC()
+	if err != nil {
+		return ""
+	}
+	return new_mac
 }
