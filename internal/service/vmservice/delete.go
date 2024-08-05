@@ -51,5 +51,5 @@ func DeleteVM(ctx context.Context, machineScope *scope.MachineScope) error {
 
 // VMNotFound checks if the given err is related to that the VM is not found in Proxmox.
 func VMNotFound(err error) bool {
-	return strings.Contains(err.Error(), "does not exist")
+	return strings.Contains(err.Error(), "cannot find vm with id")
 }
