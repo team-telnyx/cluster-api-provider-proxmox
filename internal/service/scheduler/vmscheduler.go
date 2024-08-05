@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/go-logr/logr"
 	infrav1 "github.com/ionos-cloud/cluster-api-provider-proxmox/api/v1alpha1"
@@ -51,6 +52,11 @@ func ScheduleVM(ctx context.Context, machineScope *scope.MachineScope) (string, 
 	locations := machineScope.InfraCluster.ProxmoxCluster.Status.NodeLocations.Workers
 	if util.IsControlPlaneMachine(machineScope.Machine) {
 		locations = machineScope.InfraCluster.ProxmoxCluster.Status.NodeLocations.ControlPlane
+	}
+
+	// if is an accelerated machine it can't be co-located with another accelerated machine
+	if strings.Contains(machineScope.ProxmoxMachine.Name, "accelerated") {
+		allowedNodes = filterContainsAcceleratedVMs(allowedNodes, locations)
 	}
 
 	return selectNode(ctx, client, machineScope.ProxmoxMachine, locations, allowedNodes, schedulerHints)
@@ -155,4 +161,42 @@ func (a sortByAvailableMemory) Less(i, j int) bool {
 func (a sortByAvailableMemory) String() string {
 	o, _ := json.Marshal(a)
 	return string(o)
+}
+
+func filterContainsAcceleratedVMs(allowedNodes []string, locations []infrav1.NodeLocation) []string {
+	acceleratedNodes := make([]string, 0)
+
+	for _, item := range locations {
+		if strings.Contains(item.Machine.Name, "accelerated") {
+			acceleratedNodes = append(acceleratedNodes, item.Node)
+
+		}
+	}
+	filtered := difference(allowedNodes, acceleratedNodes)
+
+	return filtered
+}
+
+func difference(slice1 []string, slice2 []string) []string {
+	diffStr := []string{}
+
+	m := map[string]int{}
+
+	for _, s1Val := range slice1 {
+		m[s1Val] = 1
+	}
+	for _, s2Val := range slice2 {
+		if m[s2Val] == 0 {
+			continue
+		}
+		m[s2Val] = m[s2Val] + 1
+	}
+
+	for mKey, mVal := range m {
+		if mVal == 1 {
+			diffStr = append(diffStr, mKey)
+		}
+	}
+
+	return diffStr
 }

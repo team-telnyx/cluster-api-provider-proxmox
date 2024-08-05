@@ -94,3 +94,12 @@ func TestSelectNode(t *testing.T) {
 		require.Equal(t, expectMem, availableMem)
 	})
 }
+
+func TestDifference(t *testing.T) {
+	t.Run("Test Difference", func(t *testing.T) {
+		allowedNodes := []string{"pve1", "pve2", "pve3"}
+		acceleratedNodes := []string{"pve1", "pve2", "pve4"}
+		result := difference(allowedNodes, acceleratedNodes)
+		require.Equal(t, []string{"pve3"}, result)
+	})
+}
